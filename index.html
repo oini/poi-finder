@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Directions and POI Buffer</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.mapbox.com/mapbox.js/v2.2.3/mapbox.js'></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js"></script>
+    <script src='osmtogeojson.js'></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    <link href='https://api.mapbox.com/mapbox.js/v2.2.3/mapbox.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <div id='inputs'></div>
+    <div id='errors'></div>
+    <div id='directions'>
+        <div id='routes'></div>
+        <div id='instructions'></div>
+    </div>
+
+    <script>
+        L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
+        var map = L.mapbox.map('map', 'ruthmaben.de10a8ca')
+            //    .addControl(L.mapbox.geocoderControl('mapbox.places'));
+            .setView([12.9861, 77.5930], 13).addControl(L.mapbox.geocoderControl('mapbox.places'));
+
+        map.on('click', function (e) {
+            makeMarker(e, drawRoute);
+        });
+        var features = [];
+        var layerList = [];
+        var overlays = {};
+        var waypoints = [];
+        var polyline = L.polyline([]).addTo(map);
+
+        function makeMarker(e, done) {
+            var marker = L.marker(e.latlng, {
+                draggable: true
+            }).addTo(map);
+            marker.on('dragend', drawRoute);
+            waypoints.push(marker);
+            return done();
+        }
+        var routeLayer = L.mapbox.featureLayer().addTo(map);
+        
+        var layerControl = L.control.layers({}, {}).addTo(map);
+
+        function drawRoute() {
+            if (waypoints.length < 2) {
+                var point = waypoints[0]._latlng;
+                var geojson = {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [point.lng, point.lat]
+                    },
+                    'properties': {
+                        'name': 'First Point'
+                    }
+                }
+                routeLayer.setGeoJSON(geojson);
+                console.log(routeLayer.getLayers());
+                calculateBuffer(1000);
+            }
+            // Directions API request looks like
+            // http://api.tiles.mapbox.com/v4/directions/mapbox.driving/
+            //    latlong.json?access_token={access_token}
+            else {
+                var points = waypoints.map(function (marker) {
+                    var latlng = marker._latlng;
+                    return [latlng.lng, latlng.lat].join(',');
+                }).join(';');
+
+                var directionsUrl = 'https://api.tiles.mapbox.com/v4/directions/mapbox.driving/' +
+                    points + '.json?access_token=' + L.mapbox.accessToken;
+
+                $.get(directionsUrl, function (data) {
+                    routeLayer.setGeoJSON(data.routes[0].geometry);
+                    routeLayer.setStyle({
+                        color: 'black'
+                    });
+                    calculateBuffer(1000);
+                });
+            }
+        }
+
+        function calculateBuffer(radius) {
+            var routes = turf.featurecollection(routeLayer.getLayers().map(function (f) {
+                return f.toGeoJSON();
+            }));
+            var buffer = turf.buffer(routes, radius, 'meters');
+            routeLayer.setGeoJSON(buffer);
+            routeLayer
+                .setGeoJSON(buffer)
+                .setStyle({
+                    stroke: true,
+                    color: "#B2B2B2",
+                    fillColor: '#400000',
+                    fillOpacity: 0.4
+                })
+            map.fitBounds(routeLayer.getBounds());
+            getPOI(buffer);
+        }
+
+        function getPOI(buffer) {
+            var bbox = routeLayer.getBounds().toBBoxString().split(',');
+            var overpassBbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
+            //return overpassBbox;
+            console.log(overpassBbox);
+            var url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
+
+            $.ajax(url)
+                .done(function (data) {
+                    var pointsGeoJSON = overpassToGeoJSON(data);
+                    var within = turf.within(pointsGeoJSON, buffer);
+                    for (var i = 0; i < within.features.length; i++) {
+                        features.push(within.features[i]);
+                    }
+                    //var features = within.features;
+                    var groupData = _.groupBy(features, function(feature) {
+                        return feature.properties.amenity;
+                    });
+                    for (var i=0; i<layerList.length; i++) {
+                        layerControl.removeLayer(layerList[i]);
+                        console.log(layerList[i]);
+                    }
+                    layerList = [];
+                    console.log(layerList);
+                    for (var key in groupData) {
+                        var geojson = {
+                            'type': 'FeatureCollection',
+                            'features': groupData[key]
+                        }
+                        var overlayer = L.mapbox.featureLayer().setGeoJSON(geojson);
+                        layerList.push(overlayer);
+                        console.log(layerList, layerList.length);
+                        layerControl.addOverlay(overlayer, key);
+                    }
+                })
+                .fail(function (err) {
+                    alert("overpass query failed!");
+                });
+        }
+
+        function overpassToGeoJSON(data) {
+            var pointsGeoJSON = {
+                'type': 'FeatureCollection',
+                'features': []
+            };
+            for (var i = 0; i <= data.elements.length; i++) {
+                var point = data.elements[i];
+                if (point && point.lat && point.lon) {
+                    var props = point.tags;
+                    props.title = point.tags.name;
+                    props['marker-color'] = "#CCCC00";
+                    props['marker-size'] = 'medium';
+                    props['marker-symbol'] = point.tags.amenity;
+                    var geojson = {
+                        'type': 'Feature',
+                        "properties": props,
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [point.lon, point.lat]
+                        }
+                    };
+                    pointsGeoJSON.features.push(geojson);
+                    // console.log(geojson);
+                }
+            }
+            return pointsGeoJSON;
+        }    
+
+    </script>
+
+</body>
+
+</html>
