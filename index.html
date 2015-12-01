@@ -9,7 +9,6 @@
     <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js'></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="//api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js"></script>
-    <script src='osmtogeojson.js'></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
     <link href='https://api.mapbox.com/mapbox.js/v2.2.3/mapbox.css' rel='stylesheet' />
     <style>
@@ -39,6 +38,26 @@
     </div>
 
     <script>
+
+
+
+        // Replace source
+        $('#map').delegate('img', 'error', function() {
+                console.log('xx err');
+                $(this).attr('src', '//api.tiles.mapbox.com/mapbox.js/v2.1.5/images/marker-icon.png');
+        });
+
+        // Replace source
+        //$('img').load(function(){
+        //        console.log('xx img load');
+        //        $(this).attr('src', '//api.tiles.mapbox.com/mapbox.js/v2.1.5/images/marker-icon.png');
+        //});
+
+        // Or, hide them
+        //$("img").error(function(){
+        //        $(this).hide();
+        //});
+
         L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
         var map = L.mapbox.map('map', 'ruthmaben.de10a8ca')
             //    .addControl(L.mapbox.geocoderControl('mapbox.places'));
@@ -79,7 +98,6 @@
                     }
                 }
                 routeLayer.setGeoJSON(geojson);
-                console.log(routeLayer.getLayers());
                 calculateBuffer(1000);
             }
             // Directions API request looks like
@@ -127,9 +145,9 @@
             var overpassBbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
             //return overpassBbox;
             console.log(overpassBbox);
-            var url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
+            var amenity_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
 
-            $.ajax(url)
+            $.ajax(amenity_url)
                 .done(function (data) {
                     var pointsGeoJSON = overpassToGeoJSON(data);
                     var within = turf.within(pointsGeoJSON, buffer);
@@ -142,10 +160,8 @@
                     });
                     for (var i=0; i<layerList.length; i++) {
                         layerControl.removeLayer(layerList[i]);
-                        console.log(layerList[i]);
                     }
                     layerList = [];
-                    console.log(layerList);
                     for (var key in groupData) {
                         var geojson = {
                             'type': 'FeatureCollection',
@@ -153,7 +169,6 @@
                         }
                         var overlayer = L.mapbox.featureLayer().setGeoJSON(geojson);
                         layerList.push(overlayer);
-                        console.log(layerList, layerList.length);
                         layerControl.addOverlay(overlayer, key);
                     }
                 })
@@ -172,9 +187,19 @@
                 if (point && point.lat && point.lon) {
                     var props = point.tags;
                     props.title = point.tags.name;
+                    props['poi-type'] = point.tags.amenity;
                     props['marker-color'] = "#CCCC00";
                     props['marker-size'] = 'medium';
-                    props['marker-symbol'] = point.tags.amenity;
+                    props['marker-symbol'] = 'star';
+
+                        
+                    $.ajax("http://a.tiles.mapbox.com/v4/marker/pin-m-"+point.tags.amenity+"+CCCC00.png?access_token=pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg")
+                        .done(function (data) {
+                            if (data) {
+                                props['marker-symbol'] = point.tags.amenity;
+                            }
+                        });
+                    
                     var geojson = {
                         'type': 'Feature',
                         "properties": props,
@@ -188,7 +213,7 @@
                 }
             }
             return pointsGeoJSON;
-        }    
+        }
 
     </script>
 
