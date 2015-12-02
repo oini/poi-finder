@@ -39,25 +39,6 @@
 
     <script>
 
-
-
-        // Replace source
-        $('#map').delegate('img', 'error', function() {
-                console.log('xx err');
-                $(this).attr('src', '//api.tiles.mapbox.com/mapbox.js/v2.1.5/images/marker-icon.png');
-        });
-
-        // Replace source
-        //$('img').load(function(){
-        //        console.log('xx img load');
-        //        $(this).attr('src', '//api.tiles.mapbox.com/mapbox.js/v2.1.5/images/marker-icon.png');
-        //});
-
-        // Or, hide them
-        //$("img").error(function(){
-        //        $(this).hide();
-        //});
-
         L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
         var map = L.mapbox.map('map', 'ruthmaben.de10a8ca')
             //    .addControl(L.mapbox.geocoderControl('mapbox.places'));
@@ -190,14 +171,15 @@
                     props['poi-type'] = point.tags.amenity;
                     props['marker-color'] = "#CCCC00";
                     props['marker-size'] = 'medium';
-                    props['marker-symbol'] = 'star';
+                    //props['marker-symbol'] = '';
 
                         
                     $.ajax("http://a.tiles.mapbox.com/v4/marker/pin-m-"+point.tags.amenity+"+CCCC00.png?access_token=pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg")
                         .done(function (data) {
-                            if (data) {
-                                props['marker-symbol'] = point.tags.amenity;
-                            }
+                            props['marker-symbol'] = point.tags.amenity;
+                        })
+                        .fail(function (err) {
+                            props['marker-symbol'] = 'star';
                         });
                     
                     var geojson = {
