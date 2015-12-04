@@ -127,22 +127,87 @@
             //return overpassBbox;
             console.log(overpassBbox);
             var amenity_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['amenity'](" + overpassBbox + ");out;";
+            var tourism_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['tourism'='attraction'](" + overpassBbox + ");out;";
+            var sports_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];node['leisure'='sports_centre'](" + overpassBbox + ");out;";
 
             $.ajax(amenity_url)
+                .done(function (data) {
+                    var pointsGeoJSON = overpassToGeoJSON(data);
+                    var within = turf.within(pointsGeoJSON, buffer);
+                    console.log(within.features);
+                    for (var i = 0; i < within.features.length; i++) {
+                        features.push(within.features[i]);
+                    }
+                    var groupData = _.groupBy(features, function(feature) {
+                        return feature.properties.amenity;
+                    });
+
+                    for (var i=0; i<layerList.length; i++) {
+                        layerControl.removeLayer(layerList[i]);
+                    }
+                    layerList = [];
+
+                    for (var key in groupData) {
+                        var geojson = {
+                            'type': 'FeatureCollection',
+                            'features': groupData[key]
+                        }
+                        var overlayer = L.mapbox.featureLayer().setGeoJSON(geojson);
+                        layerList.push(overlayer);
+                        layerControl.addOverlay(overlayer, key);
+                    }
+                })
+                .fail(function (err) {
+                    alert("overpass query failed!");
+                });
+
+            $.ajax(sports_url)
+                .done(function (data) {
+                    var pointsGeoJSON = overpassToGeoJSON(data);
+                    var within = turf.within(pointsGeoJSON, buffer);
+                    console.log(within.features);
+                    for (var i = 0; i < within.features.length; i++) {
+                        features.push(within.features[i]);
+                    }
+                    var groupData = _.groupBy(features, function(feature) {
+                        return feature.properties.amenity;
+                    });
+                    
+                    for (var i=0; i<layerList.length; i++) {
+                        layerControl.removeLayer(layerList[i]);
+                    }
+                    layerList = [];
+
+                    for (var key in groupData) {
+                        var geojson = {
+                            'type': 'FeatureCollection',
+                            'features': groupData[key]
+                        }
+                        var overlayer = L.mapbox.featureLayer().setGeoJSON(geojson);
+                        layerList.push(overlayer);
+                        layerControl.addOverlay(overlayer, key);
+                    }
+                })
+                .fail(function (err) {
+                    alert("overpass query failed!");
+                });
+
+            $.ajax(tourism_url)
                 .done(function (data) {
                     var pointsGeoJSON = overpassToGeoJSON(data);
                     var within = turf.within(pointsGeoJSON, buffer);
                     for (var i = 0; i < within.features.length; i++) {
                         features.push(within.features[i]);
                     }
-                    //var features = within.features;
                     var groupData = _.groupBy(features, function(feature) {
                         return feature.properties.amenity;
                     });
+                    
                     for (var i=0; i<layerList.length; i++) {
                         layerControl.removeLayer(layerList[i]);
                     }
                     layerList = [];
+
                     for (var key in groupData) {
                         var geojson = {
                             'type': 'FeatureCollection',
@@ -168,20 +233,59 @@
                 if (point && point.lat && point.lon) {
                     var props = point.tags;
                     props.title = point.tags.name;
-                    props['poi-type'] = point.tags.amenity;
                     props['marker-color'] = "#CCCC00";
                     props['marker-size'] = 'medium';
-                    //props['marker-symbol'] = '';
-
-                        
-                    $.ajax("http://a.tiles.mapbox.com/v4/marker/pin-m-"+point.tags.amenity+"+CCCC00.png?access_token=pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg")
-                        .done(function (data) {
+                    props['marker-symbol'] = 'circle';
+                    var amenity_marker_list = ['bar', 'school', 'fuel', 'hospital', 'police', 'cafe', 'restaurant', 'bank', 'college', 'toilets', 'library', 'pharmacy', 'dentist', 'cinema', 'theatre', 'parking', 'telephone', 'embassy']
+                    if (point.tags.amenity) {
+                        if (amenity_marker_list.indexOf(point.tags.amenity) > -1) {
                             props['marker-symbol'] = point.tags.amenity;
-                        })
-                        .fail(function (err) {
-                            props['marker-symbol'] = 'star';
-                        });
-                    
+                        }
+                        if (point.tags.amenity == 'place_of_worship') {
+                            props['marker-symbol'] = 'place-of-worship';
+                        }
+                        if (point.tags.amenity == 'post_office') {
+                            props['marker-symbol'] = 'post';
+                        }
+                        if (point.tags.amenity == 'pub') {
+                            props['marker-symbol'] = 'bar';
+                        }
+                        if (point.tags.amenity == 'fast_food') {
+                            props['marker-symbol'] = 'restaurant';
+                            point.tags.amenity = 'restaurant';
+                        }
+                        if (point.tags.amenity == 'atm') {
+                            props['marker-symbol'] = 'bank';
+                        }
+                        if (point.tags.amenity == 'kindergarten') {
+                            props['marker-symbol'] = 'school';
+                        }
+                        if (point.tags.amenity == 'clinic') {
+                            props['marker-symbol'] = 'hospital';
+                            point.tags.amenity = 'hospital';
+                        }
+                        if (point.tags.amenity == 'university') {
+                            props['marker-symbol'] = 'college';
+                            point.tags.amenity = 'college';
+                        }
+                    }
+                    if (point.tags.tourism) {
+                        props['marker-symbol'] = 'star';
+                        props['amenity'] = 'tourism';
+                    }
+                    if (point.tags.leisure) {
+                        props['marker-symbol'] = 'pitch';
+                        props['amenity'] = 'sports-centre';
+                    }
+                        
+                    //$.ajax("http://a.tiles.mapbox.com/v4/marker/pin-m-"+point.tags.amenity+"+CCCC00.png?access_token=pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg")
+                        //.done(function (data) {
+                            //props['marker-symbol'] = point.tags.amenity;
+                        //})
+                        //.fail(function (err) {
+                            //props['marker-symbol'] = 'star';
+                        //});
+
                     var geojson = {
                         'type': 'Feature',
                         "properties": props,
@@ -191,7 +295,6 @@
                         }
                     };
                     pointsGeoJSON.features.push(geojson);
-                    // console.log(geojson);
                 }
             }
             return pointsGeoJSON;
