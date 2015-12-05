@@ -52,6 +52,33 @@
         var overlays = {};
         var waypoints = [];
         var polyline = L.polyline([]).addTo(map);
+        var worshipmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var postofficemarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var pubmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var barmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var restaurantmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var fastfoodmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var cafemarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var atmmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var bankmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var kindergartenmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var schoolmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var collegemarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var universitymarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var hospitalmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var clinicmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var fuelmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var policemarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var toiletsmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var librarymarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var pharmacymarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var dentistmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var cinemamarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var theatremarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var parkingmarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var telephonemarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+        var embassymarkercolor = '#' + Math.floor(Math.random()*16777215).toString(16)+'';
+
 
         function makeMarker(e, done) {
             var marker = L.marker(e.latlng, {
@@ -140,6 +167,7 @@
                     }
                     var groupData = _.groupBy(features, function(feature) {
                         return feature.properties.amenity;
+                        console.log(feature.properties.amenity);
                     });
 
                     for (var i=0; i<layerList.length; i++) {
@@ -148,9 +176,13 @@
                     layerList = [];
 
                     for (var key in groupData) {
+                        console.log(groupData[key]);
+
+
                         var geojson = {
                             'type': 'FeatureCollection',
                             'features': groupData[key]
+
                         }
                         var overlayer = L.mapbox.featureLayer().setGeoJSON(geojson);
                         layerList.push(overlayer);
@@ -224,6 +256,9 @@
         }
 
         function overpassToGeoJSON(data) {
+             
+           
+           
             var pointsGeoJSON = {
                 'type': 'FeatureCollection',
                 'features': []
@@ -233,39 +268,105 @@
                 if (point && point.lat && point.lon) {
                     var props = point.tags;
                     props.title = point.tags.name;
-                    props['marker-color'] = "#CCCC00";
+                   
                     props['marker-size'] = 'medium';
                     props['marker-symbol'] = 'circle';
                     var amenity_marker_list = ['bar', 'school', 'fuel', 'hospital', 'police', 'cafe', 'restaurant', 'bank', 'college', 'toilets', 'library', 'pharmacy', 'dentist', 'cinema', 'theatre', 'parking', 'telephone', 'embassy']
                     if (point.tags.amenity) {
                         if (amenity_marker_list.indexOf(point.tags.amenity) > -1) {
                             props['marker-symbol'] = point.tags.amenity;
+                            console.log(point.tags.amenity);
+
+                            if (point.tags.amenity == 'bar') {
+                             props['marker-color'] = barmarkercolor;
+                            }
+                            if (point.tags.amenity == 'school') {
+                             props['marker-color'] = schoolmarkercolor;
+                            }
+                            if (point.tags.amenity == 'fuel') {
+                             props['marker-color'] = fuelmarkercolor;
+                            }
+                            if (point.tags.amenity == 'hospital') {
+                             props['marker-color'] = hospitalmarkercolor;
+                            }
+                            if (point.tags.amenity == 'police') {
+                             props['marker-color'] = policemarkercolor;
+                            }
+                            if (point.tags.amenity == 'cafe') {
+                             props['marker-color'] = cafemarkercolor;
+                            }
+                            if (point.tags.amenity == 'restaurant') {
+                             props['marker-color'] = restaurantmarkercolor;
+                            }
+                            if (point.tags.amenity == 'bank') {
+                             props['marker-color'] = bankmarkercolor;
+                            }
+                            if (point.tags.amenity == 'college') {
+                             props['marker-color'] = collegemarkercolor;
+                            }
+                            if (point.tags.amenity == 'toilets') {
+                             props['marker-color'] = toiletsmarkercolor;
+                            }
+                            if (point.tags.amenity == 'library') {
+                             props['marker-color'] = librarymarkercolor;
+                            }
+                            if (point.tags.amenity == 'pharmacy') {
+                             props['marker-color'] = pharmacymarkercolor;
+                            }
+                            if (point.tags.amenity == 'dentist') {
+                             props['marker-color'] = dentistmarkercolor;
+                            }
+                            if (point.tags.amenity == 'cinema') {
+                             props['marker-color'] = cinemamarkercolor;
+                            }
+                            if (point.tags.amenity == 'theatre') {
+                             props['marker-color'] = theatremarkercolor;
+                            }
+                            if (point.tags.amenity == 'parking') {
+                             props['marker-color'] = parkingmarkercolor;
+                            }
+                            if (point.tags.amenity == 'telephone') {
+                             props['marker-color'] = telephonemarkercolor;
+                            }
+                            if (point.tags.amenity == 'embassy') {
+                             props['marker-color'] = embassymarkercolor;
+                            }
+
+                            
                         }
                         if (point.tags.amenity == 'place_of_worship') {
                             props['marker-symbol'] = 'place-of-worship';
+                             props['marker-color'] = worshipmarkercolor;
                         }
                         if (point.tags.amenity == 'post_office') {
                             props['marker-symbol'] = 'post';
+                             props['marker-color'] = postofficemarkercolor;
                         }
                         if (point.tags.amenity == 'pub') {
                             props['marker-symbol'] = 'bar';
+                             props['marker-color'] = pubmarkercolor;
                         }
                         if (point.tags.amenity == 'fast_food') {
                             props['marker-symbol'] = 'restaurant';
+                            props['marker-color'] = fastfoodmarkercolor;
                             point.tags.amenity = 'restaurant';
                         }
                         if (point.tags.amenity == 'atm') {
                             props['marker-symbol'] = 'bank';
+                            props['marker-color'] = atmmarkercolor;
                         }
                         if (point.tags.amenity == 'kindergarten') {
                             props['marker-symbol'] = 'school';
+                            props['marker-color'] = kindergartenmarkercolor;
                         }
                         if (point.tags.amenity == 'clinic') {
                             props['marker-symbol'] = 'hospital';
                             point.tags.amenity = 'hospital';
+                            props['marker-color'] =clinicmarkercolor;
                         }
                         if (point.tags.amenity == 'university') {
                             props['marker-symbol'] = 'college';
+                            props['marker-color'] = universitymarkercolor;
                             point.tags.amenity = 'college';
                         }
                     }
