@@ -41,10 +41,15 @@
 
     <script>
 
-    L.mapbox.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjaWVoOGFiNWUwMDl2c3JtMXBzcWluaDN5In0.uunHEpdx8grTpnmTwTwxHA';
-    var map = L.mapbox.map('map')
-            .setView([12.98094440722401,77.64049619436264], 18).addControl(L.mapbox.geocoderControl('mapbox.places'));
-    L.mapbox.styleLayer('mapbox://styles/poorni-badrinath/cizf1yaws00i52spmbu1kacxv').addTo(map);
+    L.mapbox.accessToken = 'pk.eyJ1Ijoic3JpdmlkeWEiLCJhIjoicXo2NTJKayJ9.m1P57SCwkp8_7N3TgYsVRg';
+    var map = L.mapbox.map('map', 'ruthmaben.de10a8ca')
+        //    .addControl(L.mapbox.geocoderControl('mapbox.places'));
+        .setView([12.98094440722401,77.64049619436264], 15).addControl(L.mapbox.geocoderControl('mapbox.places'));
+
+    // L.mapbox.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjaWVoOGFiNWUwMDl2c3JtMXBzcWluaDN5In0.uunHEpdx8grTpnmTwTwxHA';
+    // var map = L.mapbox.map('map')
+    //         .setView([12.98094440722401,77.64049619436264], 18).addControl(L.mapbox.geocoderControl('mapbox.places'));
+    // L.mapbox.styleLayer('mapbox://styles/poorni-badrinath/cizf1yaws00i52spmbu1kacxv').addTo(map);
 
 
           map.on('click', function (e) {
@@ -113,7 +118,7 @@
                       stroke: true,
                       color: "#B2B2B2",
                       fillColor: '#400000',
-                      fillOpacity: 0.1
+                      fillOpacity: 0.2
                   })
               map.fitBounds(routeLayer.getBounds());
               getPOI(buffer);
@@ -122,16 +127,22 @@
           function getPOI(buffer) {
             var bbox = routeLayer.getBounds().toBBoxString().split(',');
             var overpassBbox = bbox[1] + ',' + bbox[0] + ',' + bbox[3] + ',' + bbox[2];
-            var amenity_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['amenity'='restaurant']("
-             + overpassBbox + ");way['amenity'='restaurant'](" + overpassBbox + ");node['amenity'='fast_food']("
-             + overpassBbox + ");way['amenity'='fast_food'](" + overpassBbox + ");node['amenity'='bar']("
-             + overpassBbox + ");way['amenity'='bar'](" + overpassBbox + ");node['amenity'='pub'](" + overpassBbox +
-             ");way['amenity'='pub'](" + overpassBbox + ");node['amenity'='hospital'](" + overpassBbox +
-             ");way['amenity'='hospital'](" + overpassBbox + ");node['amenity'='bank'](" + overpassBbox +
-             ");way['amenity'='bank'](" + overpassBbox + ");node['amenity'='atm'](" + overpassBbox + ");way['amenity'='atm']("
-             + overpassBbox + "););out center;";
-            var metro_station_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['railway'='station'](" + overpassBbox + ");way['railway'='station'](" + overpassBbox + "););out center;";
-            var gym_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['leisure'='fitness_centre'](" + overpassBbox + ");way['leisure'='fitness_centre'](" + overpassBbox + "););out center;";
+            // var amenity_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['amenity'='restaurant']("
+            //  + overpassBbox + ");way['amenity'='restaurant'](" + overpassBbox + ");node['amenity'='fast_food']("
+            //  + overpassBbox + ");way['amenity'='fast_food'](" + overpassBbox + ");node['amenity'='bar']("
+            //  + overpassBbox + ");way['amenity'='bar'](" + overpassBbox + ");node['amenity'='pub'](" + overpassBbox +
+            //  ");way['amenity'='pub'](" + overpassBbox + ");node['amenity'='hospital'](" + overpassBbox +
+            //  ");way['amenity'='hospital'](" + overpassBbox + ");node['amenity'='bank'](" + overpassBbox +
+            //  ");way['amenity'='bank'](" + overpassBbox + ");node['amenity'='atm'](" + overpassBbox + ");way['amenity'='atm']("
+            //  + overpassBbox + "););out center;";
+            // var url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['amenity'='hospital'](" + overpassBbox +
+            // ");way['amenity'='hospital'](" + overpassBbox + ");node['amenity'='bank'](" + overpassBbox +
+            // ");way['amenity'='bank'](" + overpassBbox + ");node['amenity'='atm'](" + overpassBbox + ");way['amenity'='atm']("
+            // + overpassBbox + ");node['railway'='station'](" + overpassBbox + ");way['railway'='station'](" + overpassBbox +
+            // ");node['leisure'='fitness_centre'](" + overpassBbox + ");way['leisure'='fitness_centre'](" + overpassBbox +
+            // "););out center;";
+            // var metro_station_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['railway'='station'](" + overpassBbox + ");way['railway'='station'](" + overpassBbox + "););out center;";
+            // var gym_url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['leisure'='fitness_centre'](" + overpassBbox + ");way['leisure'='fitness_centre'](" + overpassBbox + "););out center;";
             var url = "http://www.overpass-api.de/api/interpreter?data=[out:json];(node['amenity'='restaurant']("
              + overpassBbox + ");way['amenity'='restaurant'](" + overpassBbox + ");node['amenity'='fast_food']("
              + overpassBbox + ");way['amenity'='fast_food'](" + overpassBbox + ");node['amenity'='bar']("
@@ -193,7 +204,7 @@
                       var props = point.tags;
                       props.title = point.tags.name;
                       props['marker-color'] = "#CCCC00";
-                      props['marker-size'] = 'medium';
+                      props['marker-size'] = 'small';
                       props['marker-symbol'] = 'circle';
                       var geojson = {
                           'type': 'Feature',
